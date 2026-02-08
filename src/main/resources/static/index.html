@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sport Management Panel</title>
+
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select, button { padding: 6px; margin: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #f2f2f2; }
+    .box { border: 1px solid #ddd; padding: 10px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<h2>Sport Management – Admin Panel</h2>
+<p id="msg"></p>
+
+<div class="box">
+  <h3>Sports</h3>
+  <input id="sportName" placeholder="Sport name (e.g. Judo)" />
+  <button onclick="addSport()">Add sport</button>
+  <ul id="sportsList"></ul>
+</div>
+
+<div class="box">
+  <h3>Add Athlete</h3>
+  <input id="athleteName" placeholder="Name" />
+  <input id="athleteAge" type="number" placeholder="Age" value="18" />
+  <input id="athleteRanking" type="number" placeholder="Ranking" value="1" />
+  <select id="sportSelect"></select>
+  <button onclick="addAthlete()">Add athlete</button>
+</div>
+
+<div class="box">
+  <h3>Athletes</h3>
+
+  <div class="filters">
+    <button onclick="loadAllAthletes()">All</button>
+    <button onclick="loadChampionshipThisYear()">18+ (Qualified)</button>
+    <button onclick="loadChampionshipNextYear()">&lt; 18 (Next year)</button>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Age</th><th>Ranking</th><th>Sport</th><th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="athletesTable"></tbody>
+  </table>
+</div>
+
+<script>
+  const msg = (t) => document.getElementById("msg").innerText = t;
+
+  async function api(url, options) {
+    const res = await fetch(url, options);
+    if (!res.ok) throw new Error(await res.text());
+    const ct = res.headers.get("content-type") || "";
+    return ct.includes("application/json") ? res.json() : res.text();
+  }
+
+  async function loadSports() {
+    const sports = await api("/api/sports");
+    const ul = document.getElementById("sportsList");
+    const select = document.getElementById("sportSelect");
+    ul.innerHTML = "";
+    select.innerHTML = "";
+
+    sports.forEach(s => {
+      const li = document.createElement("li");
+      li.innerHTML = `${s.name} (id:${s.id}) <button onclick="deleteSport(${s.id})">delete</button>`;
+      ul.appendChild(li);
+
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.innerText = `${s.name} (id:${s.id})`;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderAthletes(athletes) {
+    const tbody = document.getElementById("athletesTable");
+    tbody.innerHTML = "";
+
+    athletes.forEach(a => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.id}</td>
+        <td>${a.name}</td>
+        <td>${a.age}</td>
+        <td>${a.ranking}</td>
+        <td>${a.sport?.name || ""}</td>
+        <td>
+          <button onclick="editAthlete(${a.id})">edit</button>
+          <button onclick="deleteAthlete(${a.id})">delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadAllAthletes() {
+    const athletes = await api("/api/athletes");
+    renderAthletes(athletes);
+  }
+
+  async function loadChampionshipThisYear() {
+    const athletes = await api("/api/athletes/championship/this-year");
+    renderAthletes(athletes);
+  }
+
+  async function loadChampionshipNextYear() {
+    const athletes = await api("/api/athletes/championship/next-year");
+    renderAthletes(athletes);
+  }
+
+  async function addSport() {
+    const name = document.getElementById("sportName").value.trim();
+    if (!name) return;
+    await api(`/api/sports?name=${encodeURIComponent(name)}`, { method: "POST" });
+    document.getElementById("sportName").value = "";
+    msg("Sport added");
+    loadSports();
+  }
+
+  async function deleteSport(id) {
+    await api(`/api/sports/${id}`, { method: "DELETE" });
+    msg("Sport deleted");
+    loadSports();
+  }
+
+  async function addAthlete() {
+    const name = document.getElementById("athleteName").value.trim();
+    const age = document.getElementById("athleteAge").value;
+    const ranking = document.getElementById("athleteRanking").value;
+    const sportId = document.getElementById("sportSelect").value;
+
+    if (!name) return;
+
+    await api(`/api/athletes?name=${encodeURIComponent(name)}&age=${age}&ranking=${ranking}&sportId=${sportId}`, {
+      method: "POST"
+    });
+
+    document.getElementById("athleteName").value = "";
+    msg("Athlete added");
+    loadAllAthletes();
+  }
+
+  async function deleteAthlete(id) {
+    await api(`/api/athletes/${id}`, { method: "DELETE" });
+    msg("Athlete deleted");
+    loadAllAthletes();
+  }
+
+  async function editAthlete(id) {
+    const age = prompt("New age (empty = no change):");
+    const ranking = prompt("New ranking (empty = no change):");
+    const sportId = prompt("New sportId (empty = no change):");
+
+    const params = [];
+    if (age) params.push(`age=${age}`);
+    if (ranking) params.push(`ranking=${ranking}`);
+    if (sportId) params.push(`sportId=${sportId}`);
+
+    if (params.length === 0) return;
+
+    await api(`/api/athletes/${id}?${params.join("&")}`, { method: "PUT" });
+    msg("Athlete updated");
+    loadAllAthletes();
+  }
+
+  // init
+  loadSports();
+  loadAllAthletes();
+</script>
+
+</body>
+</html>

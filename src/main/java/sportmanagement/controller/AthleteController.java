@@ -24,7 +24,7 @@ public class AthleteController {
     // GET /api/athletes
     @GetMapping
     public List<Athlete> getAll() {
-        return athleteRepo.findAll();
+        return athleteRepo.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
     // GET /api/athletes/sorted/age
