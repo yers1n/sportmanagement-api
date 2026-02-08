@@ -24,4 +24,17 @@ public class Sport {
     public String getName() { return name; }
 
     public void setName(String name) { this.name = name; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Sport sport = (Sport) o;
+        return name != null && name.equalsIgnoreCase(sport.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name == null ? 0 : name.toLowerCase().hashCode();
+    }
 }

@@ -6,8 +6,9 @@
 1) Открой проект в IntelliJ IDEA
 2) Запусти класс `SportmanagementApiApplication`
 3) Сервер стартует на `http://localhost:8080`
-
+s
 ## Проверка в браузере (GET)
+- http://localhost:8080/index.html
 - http://localhost:8080/api/athletes
 - http://localhost:8080/api/sports
 - http://localhost:8080/api/athletes/sorted/age
