@@ -4,46 +4,37 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "athlete")
-public class Athlete {
+public class Athlete extends Person implements Eligible {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    private int rank;
 
-    private int age;
-    private int ranking;
-
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "sport_id")
     private Sport sport;
 
     public Athlete() {}
 
-    public Athlete(String name, int age, Sport sport, int ranking) {
-        this.name = name;
-        this.age = age;
+    public Athlete(String name, int age, Sport sport, int rank) {
+        setName(name);
+        setAge(age);
         this.sport = sport;
-        this.ranking = ranking;
+        this.rank = rank;
     }
 
     public Long getId() { return id; }
 
-    public String getName() { return name; }
-
-    public int getAge() { return age; }
-
-    public int getRanking() { return ranking; }
+    public int getRank() { return rank; }
+    public void setRank(int rank) { this.rank = rank; }
 
     public Sport getSport() { return sport; }
-
-    public void setName(String name) { this.name = name; }
-
-    public void setAge(int age) { this.age = age; }
-
-    public void setRanking(int ranking) { this.ranking = ranking; }
-
     public void setSport(Sport sport) { this.sport = sport; }
+
+    @Override
+    public boolean isEligible() {
+        return getAge() >= 18;
+    }
 }

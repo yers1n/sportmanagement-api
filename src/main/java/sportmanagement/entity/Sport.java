@@ -1,16 +1,16 @@
 package sportmanagement.entity;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "sport")
 public class Sport {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable=false, unique=true)
     private String name;
 
     public Sport() {}
@@ -26,15 +26,20 @@ public class Sport {
     public void setName(String name) { this.name = name; }
 
     @Override
+    public String toString() {
+        return "Sport{id=" + id + ", name='" + name + "'}";
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Sport)) return false;
         Sport sport = (Sport) o;
-        return name != null && name.equalsIgnoreCase(sport.name);
+        return id != null && Objects.equals(id, sport.id);
     }
 
     @Override
     public int hashCode() {
-        return name == null ? 0 : name.toLowerCase().hashCode();
+        return id == null ? 0 : id.hashCode();
     }
 }

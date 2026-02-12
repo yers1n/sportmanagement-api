@@ -1,11 +1,9 @@
 package sportmanagement.controller;
 
-import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import sportmanagement.dto.SportCreateRequest;
 import sportmanagement.entity.Sport;
-import sportmanagement.repo.AthleteRepository;
-import sportmanagement.repo.SportRepository;
+import sportmanagement.service.SportService;
 
 import java.util.List;
 
@@ -13,37 +11,30 @@ import java.util.List;
 @RequestMapping("/api/sports")
 public class SportController {
 
-    private final SportRepository sportRepo;
-    private final AthleteRepository athleteRepo;
+    private final SportService sportService;
 
-    public SportController(SportRepository sportRepo, AthleteRepository athleteRepo) {
-        this.sportRepo = sportRepo;
-        this.athleteRepo = athleteRepo;
+    public SportController(SportService sportService) {
+        this.sportService = sportService;
     }
 
-    // GET /api/sports
     @GetMapping
     public List<Sport> getAll() {
-        return sportRepo.findAll(Sort.by(Sort.Direction.ASC, "id"));
+        return sportService.getAll();
     }
 
-    // POST /api/sports?name=Judo
     @PostMapping
     public Sport add(@RequestParam String name) {
-        Sport sport = sportRepo.findByNameIgnoreCase(name)
-                .orElseGet(() -> new Sport(name));
-        return sportRepo.save(sport);
+        return sportService.createOrGet(name);
     }
 
-    // DELETE
-    @Transactional
+    @PostMapping("/json")
+    public Sport addJson(@RequestBody SportCreateRequest req) {
+        return sportService.createOrGet(req == null ? null : req.name);
+    }
+
     @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id) {
-        if (!sportRepo.existsById(id)) return "Sport not found";
-
-        athleteRepo.deleteBySport_Id(id);
-        sportRepo.deleteById(id);
-
+        sportService.deleteWithAthletes(id);
         return "Deleted sport and related athletes";
     }
 }
