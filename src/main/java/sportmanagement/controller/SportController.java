@@ -1,8 +1,9 @@
 package sportmanagement.controller;
 
 import org.springframework.web.bind.annotation.*;
+import sportmanagement.dto.SportCreateRequest;
 import sportmanagement.entity.Sport;
-import sportmanagement.repo.SportRepository;
+import sportmanagement.service.SportService;
 
 import java.util.List;
 
@@ -10,31 +11,30 @@ import java.util.List;
 @RequestMapping("/api/sports")
 public class SportController {
 
-    private final SportRepository sportRepo;
+    private final SportService sportService;
 
-    public SportController(SportRepository sportRepo) {
-        this.sportRepo = sportRepo;
+    public SportController(SportService sportService) {
+        this.sportService = sportService;
     }
 
-    // GET /api/sports
     @GetMapping
     public List<Sport> getAll() {
-        return sportRepo.findAll();
+        return sportService.getAll();
     }
 
-    // POST /api/sports?name=Judo
     @PostMapping
     public Sport add(@RequestParam String name) {
-        Sport sport = sportRepo.findByNameIgnoreCase(name)
-                .orElseGet(() -> new Sport(name));
-        return sportRepo.save(sport);
+        return sportService.createOrGet(name);
     }
 
-    // DELETE /api/sports/{id}
+    @PostMapping("/json")
+    public Sport addJson(@RequestBody SportCreateRequest req) {
+        return sportService.createOrGet(req == null ? null : req.name);
+    }
+
     @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id) {
-        if (!sportRepo.existsById(id)) return "Sport not found";
-        sportRepo.deleteById(id);
-        return "Deleted";
+        sportService.deleteWithAthletes(id);
+        return "Deleted sport and related athletes";
     }
 }
